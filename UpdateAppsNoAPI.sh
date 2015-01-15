@@ -1,7 +1,7 @@
 #!/bin/sh
 # Origonal version written by Jason at Newton Public Schools
 # Updated and Modified by Todd Houle at Partners Healthcare
-# 1-16-2015
+# 1-14-2015
 # UpdateApps.sh
 
 dp_url="peascaspernorth.partners.org/Packages"
@@ -63,20 +63,22 @@ notify(){
    fi
 }
 
+
 updateAppleSW(){
-##Run AppleSoftwareUpdates
-    notify "Updating Apple OS Software."
-    neededSW=`softwareupdate -l | grep -A1 \*| tail -1`
-    rebootMe=`echo $neededSW |grep restart`
+    notify "Checking Apple OS Software."
+    rebootneeded=`softwareupdate -l |grep -A1 \*|grep restart`
+
+    ##Run AppleSoftwareUpdates
 
     `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
     notify "Finalizing Updates"
     `/usr/sbin/jamf recon > /dev/null 2>&1`   
 
-    if [[ "$rebootMe" == "" ]]; then
+    if [[ "$rebootneeded" == "" ]]; then
 	notify "Updates have completed!"
     else
-        notify "A REBOOT is REQUIRED.  Please Reboot your computer"
+#        notify "A REBOOT is REQUIRED.  Please Reboot your computer"
+	/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "Updates have been applied to your computer and require a reboot. Please reboot your computer to finalize updates."
     fi
 }
 
@@ -87,6 +89,9 @@ updateAppleSW(){
 # Location of version string is the identifier in the plist that contains the app version    
 ## latest version is the version of the app on the PEAS server - If version on peas server is newer, local version will be updated     
 ## JAMFPolicy is the name of the policy that will be run if local version is older than server version 
+
+notify "Checking Applications for required updates."
+sleep 2
 
 #         App Name           App Path                    Location of ver vers      lastest ver     JamfPolicyToGetLatest    
 update "GoogleChrome" "/Applications/Google Chrome.app" "CFBundleShortVersionString" "39.0.2171.99" "GoogleChrome"
