@@ -1,16 +1,16 @@
 #!/bin/sh
-# Original version written by Jason at Newton Public Schools
+# Origonal version written by Jason at Newton Public Schools
 # Updated and Modified by Todd Houle at Partners Healthcare
 # 1-14-2015
 # UpdateApps.sh
 
+dp_url="peascaspernorth.partners.org/Packages"
 
-# Copy down VersionCompare.py for later use.  It is used to compare versions of software to know if they need updating
-if [ ! -f "/Library/Application Support/JAMF/Partners/Library/Scripts/VersionCompare.py" ]; then
-    jamf policy -event versioncompare
+# Copy down VersionCompare.py for later use
+if [ ! -f /tmp/VersionCompare.py ]; then
+    curl -s -o /tmp/VersionCompare.py http://$dp_url/VersionCompare.dmg
 fi
-chmod +x /Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py
-
+chmod -R 777 /tmp/VersionCompare.py
 
 ### Define function for updating most apps###
 update(){
