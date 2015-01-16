@@ -1,7 +1,7 @@
 #!/bin/sh
 # Original version written by Jason at Newton Public Schools
 # Updated and Modified by Todd Houle at Partners Healthcare
-# 1-14-2015
+# 1-16-2015
 # UpdateApps.sh
 
 
@@ -32,7 +32,7 @@ update(){
 	echo ">>>Currently installed version of $appName is $installedVersion"
 	# Install update if needed
 	if [[ -d $appPath ]]; then
-       	    if [[ $(/tmp/VersionCompare.py $latestVersion $installedVersion) -eq 1 ]] || [[ -L $appPath ]]; then
+       	    if [[ $(/Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py $latestVersion $installedVersion) -eq 1 ]] || [[ -L $appPath ]]; then
 		if [[ `ps auxw | grep "$appPath" | grep -v "Syncplicity" |grep -v "Database Daemon"|grep -v grep` == "" ]]; then
                     notify "$appName is being updated to version $latestVersion"
                     echo ">>>Update of $appName is needed. Installing $appName $latestVersion"
@@ -73,12 +73,12 @@ updateAppleSW(){
 
     `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
     notify "Finalizing Updates"
- #   `/usr/sbin/jamf recon > /dev/null 2>&1`   
+    `/usr/sbin/jamf recon > /dev/null 2>&1`   
 
     if [[ "$rebootneeded" == "" ]]; then
 	notify "Updates have completed!"
     else
-#        notify "A REBOOT is REQUIRED.  Please Reboot your computer"
+
 	/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "Updates have been applied to your computer and require a reboot. Please reboot your computer to finalize updates."
     fi
 }
@@ -130,9 +130,10 @@ checkForUpdates(){
 
 
 
-##############################
-#############################
+##########################################################
+### MAIN SECTION TO START THE WORK OF ROUTINES ABOVE  ####
+##########################################################
 checkForUpdates  #routine to check and update apps
 
-### Call function for Apple updates  
-#updateAppleSW
+### At end, call function for Apple updates  
+updateAppleSW
