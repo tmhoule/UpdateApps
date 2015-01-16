@@ -1,7 +1,7 @@
 #!/bin/sh
 # Original version written by Jason at Newton Public Schools
 # Updated and Modified by Todd Houle at Partners Healthcare
-# 1-14-2015
+# 1-16-2015
 # UpdateApps.sh
 
 
@@ -32,7 +32,7 @@ update(){
 	echo ">>>Currently installed version of $appName is $installedVersion"
 	# Install update if needed
 	if [[ -d $appPath ]]; then
-       	    if [[ $(/tmp/VersionCompare.py $latestVersion $installedVersion) -eq 1 ]] || [[ -L $appPath ]]; then
+       	    if [[ $(/Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py $latestVersion $installedVersion) -eq 1 ]] || [[ -L $appPath ]]; then
 		if [[ `ps auxw | grep "$appPath" | grep -v "Syncplicity" |grep -v "Database Daemon"|grep -v grep` == "" ]]; then
                     notify "$appName is being updated to version $latestVersion"
                     echo ">>>Update of $appName is needed. Installing $appName $latestVersion"
