@@ -67,21 +67,27 @@ notify(){
 
 updateAppleSW(){
     notify "Checking Apple OS Software."
-    rebootneeded=`softwareupdate -l |grep -A1 \*|grep restart`
-
-    ##Run AppleSoftwareUpdates
-
-    `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
-    notify "Finalizing Updates"
-    `/usr/sbin/jamf recon > /dev/null 2>&1`   
-
-    if [[ "$rebootneeded" == "" ]]; then
-	notify "Updates have completed!"
+    updateList=`softwareupdate -l 2>&1`  #2>&1 redirects stderr to stdout so it'll be available to grep.  No New software available is a STDERR message instead of STDOUT
+    rebootNeeded=`echo $updateList |grep -A1 \*|grep restart`
+    updatesNeeded=`echo $updateList |grep "No new software available"`
+    
+    ##Run AppleSoftwareUpdates                                                                                                                                                                                                                                                                                                                                  
+    if [[ ! $updatesNeeded =~ "No new software available" ]]; then
+	if [[ "$rebootneeded" == "" ]]; then
+	    notify "Applying Apple OS Updates..."
+            `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`   
+	else
+            asuReboot=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Updates require a reboot. Please reboot your computer to finalize updates." -button1 "Reboot" -button2 "Skip" defaultButton 1`
+            if [ $asuReboot == 0 ]; then
+		`/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
+		/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "Updates have been applied to your computer and require a reboot. Please reboot your computer to finalize updates."
+            fi
+	fi
     else
-
-	/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "Updates have been applied to your computer and require a reboot. Please reboot your computer to finalize updates."
+	echo "No Apple OS updates Needed"
     fi
 }
+
 
 
 ### routine to respond if an app was running and couldn't be updated.
@@ -137,3 +143,7 @@ checkForUpdates  #routine to check and update apps
 
 ### At end, call function for Apple updates  
 updateAppleSW
+
+notify "Finalizing Updates"
+`/usr/sbin/jamf recon > /dev/null 2>&1`   
+notify "All Updates Have Completed."
