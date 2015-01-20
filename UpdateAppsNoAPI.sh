@@ -40,7 +40,6 @@ update(){
 		    logger "PEAS Updater is updating $appName"
 		else
 		    echo ">>>$appPath is currently running. Cannot update."
-		    sleep 3
 		    RUNNINGAPPSARRAY+=("$appName")
 		fi
 	    else
@@ -97,12 +96,12 @@ runningapps(){
     if [[ $count -eq 0 ]]; then
 	echo ">> No in use programs need updating.  Awesome!"
     elif [[ $count -ge 2 ]]; then
-        result=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -title "PEAS Updates" -hdeading "Programs in Use" -description "The applications $inUseApps need updating but are in use.  Please quit those programs and try again." -button2 "Skip" -button1 "Retry" -default button2`
+        result=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType utility -title "PEAS Updates" -heading "Programs in Use" -description "The applications $inUseApps need updating but are in use.  Please quit those programs and try again." -button2 "Skip" -button1 "Retry" -default button2`
         if [ "$result" == "0" ]; then
             checkForUpdates
         fi
     else
-	result=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -title "PEAS Updates" -hdeading "Programs in Use" -description "The application ${RUNNINGAPPSARRAY[@]} needs updating but it is in use.  Please quit that program and try again." -button2 "Skip" -button1 "Retry" -default button2`
+	result=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType utility -title "PEAS Updates" -heading "Programs in Use" -description "The application ${RUNNINGAPPSARRAY[@]} needs updating but it is in use.  Please quit that program and try again." -button2 "Skip" -button1 "Retry" -default button2`
 	if [ "$result" == "0" ]; then
 	    checkForUpdates
 	fi
