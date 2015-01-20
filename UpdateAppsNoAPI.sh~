@@ -40,8 +40,10 @@ update(){
 		    logger "PEAS Updater is updating $appName"
 		else
 		    echo ">>>$appPath is currently running. Cannot update."
+#		    notify "$appName needs updating but cannot as it is in use."
 		    sleep 3
 		    RUNNINGAPPSARRAY+=("$appName")
+		    echo "####>>>##>> List is now  ${RUNNINGAPPSARRAY[@]} here!"
 		fi
 	    else
 		echo ">>>No update of $appName is needed."
