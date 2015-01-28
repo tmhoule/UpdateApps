@@ -66,12 +66,12 @@ notify(){
 updateAppleSW(){
 #    notify "Checking Apple OS Software."
     updateList=`softwareupdate -l 2>&1`  #2>&1 redirects stderr to stdout so it'll be available to grep.  No New software available is a STDERR message instead of STDOUT
-    rebootNeeded=`echo $updateList |grep -A1 \*|grep restart`
-    updatesNeeded=`echo $updateList |grep "No new software available"`
+    rebootNeeded=`echo "$updateList" |grep -A1 \*|grep restart`
+    updatesNeeded=`echo "$updateList" |grep "No new software available"`
     
     ##Run AppleSoftwareUpdates                                                                                                                                                                                                                                                                                                                                  
     if [[ ! $updatesNeeded =~ "No new software available" ]]; then
-	if [[ "$rebootneeded" == "" ]]; then
+	if [[ "$rebootNeeded" == "" ]]; then
 	    notify "Applying Apple OS Updates..."
             `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`   
 	else
