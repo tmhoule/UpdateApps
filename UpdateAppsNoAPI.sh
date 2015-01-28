@@ -78,7 +78,7 @@ updateAppleSW(){
             asuReboot=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Updates require a reboot. Please reboot your computer to finalize updates." -button1 "Reboot" -button2 "Skip" defaultButton 1`
             if [ $asuReboot == 0 ]; then
 		`/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
-		/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "Updates have been applied to your computer and require a reboot. Please reboot your computer to finalize updates."
+	#	/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "Updates have been applied to your computer and require a reboot. Please reboot your computer to finalize updates."
             fi
 	fi
     else
@@ -146,3 +146,6 @@ updateAppleSW
 notify "Finalizing Updates"
 `/usr/sbin/jamf recon > /dev/null 2>&1`   
 notify "All Updates Have Completed."
+ if [ $asuReboot == 0 ]; then
+	`/sbin/reboot`
+fi
