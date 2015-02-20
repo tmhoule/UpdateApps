@@ -1,7 +1,7 @@
 #!/bin/sh
 # Original version written by Jason at Newton Public Schools
 # Updated and Modified by Todd Houle at Partners Healthcare
-# 1-17-2015
+# 1-20-2015
 # UpdateApps.sh
 
 
@@ -14,7 +14,7 @@ chmod +x /Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionComp
 
 ### Define function for updating most apps###
 update(){
-	# Rename function arguments for easier reference
+    # Rename function arguments for easier reference
         appName="$1" # The way the package is named in CasperShare i.e. Google Chrome
         appPath="$2" # In format /Applications/Google Chrome.app - no trailing slash
         versionString="$3" # The version we want to compare
@@ -22,29 +22,41 @@ update(){
 	policyToRun="$5"  #The policy to run to get latest version
 
 	# Only do all of this if the app is installed and is not currently running
-  	    # Define version installed on local machine
+	    # Define version installed on local machine
 	if [ "$appName" == "Microsoft Office" ]; then
-	    installedVersion=`defaults read "$appPath/Microsoft Word.app/Contents/Info.plist" |grep "$versionString" |awk '{print $3}'|sed -e 's/\"//g'|sed -e 's/;//g'`
-	else
-	    installedVersion=`defaults read "$appPath/Contents/Info.plist" | grep "$versionString" |awk '{print $3}'|sed -e 's/\"//g'|sed -e 's/;//g'`
-	fi
+	        installedVersion=`defaults read "$appPath/Microsoft Word.app/Contents/Info.plist" |grep "$versionString" |awk '{print $3}'|sed -e 's/\"//g'|sed -e 's/;//g'`
+		else
+	        installedVersion=`defaults read "$appPath/Contents/Info.plist" | grep "$versionString" |awk '{print $3}'|sed -e 's/\"//g'|sed -e 's/;//g'`
+		fi
 	# For logging - print out current version
 	echo ">>>Currently installed version of $appName is $installedVersion"
 	# Install update if needed
 	if [[ -d $appPath ]]; then
-       	    if [[ $(/Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py $latestVersion $installedVersion) -eq 1 ]] || [[ -L $appPath ]]; then
-		if [[ `ps auxw | grep "$appPath" | grep -v "Syncplicity" |grep -v "Database Daemon"|grep -v grep` == "" ]]; then
-                    notify "$appName is being updated to version $latestVersion"
-                    echo ">>>Update of $appName is needed. Installing $appName $latestVersion"
-		    /usr/sbin/jamf policy -event $policyToRun
-		    logger "PEAS Updater is updating $appName"
+	        if [[ $(/Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py $latestVersion $installedVersion) -eq 1 ]] || [[ -L $appPath ]]; then
+		    if [[ `ps auxw | grep "$appPath" | grep -v "Syncplicity" |grep -v "Database Daemon"|grep -v grep` == "" ]]; then
+			if [[ "$appPath" == "/Applications/Microsoft Office 2011" ]]; then
+			    if [[ `ps auxw |grep -i chrome | grep -v grep` == "" ]] && [[ `ps auxw |grep -i firefox | grep -v grep` == "" ]]; then
+				notify "$appName is being updated to version $latestVersion"
+                                echo ">>>Update of $appName is needed. Installing $appName $latestVersion"
+				/usr/sbin/jamf policy -event $policyToRun
+				logger "PEAS Updater is updating $appName"
+				
+			    else
+				notify "FireFox or Chrome cannot be running when updating MS Office.  Please close them and try again"
+			    fi
+			else
+			    notify "$appName is being updated to version $latestVersion"
+			    echo ">>>Update of $appName is needed. Installing $appName $latestVersion"
+			    /usr/sbin/jamf policy -event $policyToRun
+			    logger "PEAS Updater is updating $appName"
+			fi
+		    else
+			echo ">>>$appPath is currently running. Cannot update."
+			RUNNINGAPPSARRAY+=("$appName")
+		    fi
 		else
-		    echo ">>>$appPath is currently running. Cannot update."
-		    RUNNINGAPPSARRAY+=("$appName")
+		    echo ">>>No update of $appName is needed."
 		fi
-	    else
-		echo ">>>No update of $appName is needed."
-	    fi
 	else
 	    echo ">>>$appPath is not installed on this machine"
 	fi
@@ -66,21 +78,21 @@ notify(){
 updateAppleSW(){
 #    notify "Checking Apple OS Software."
     updateList=`softwareupdate -l 2>&1`  #2>&1 redirects stderr to stdout so it'll be available to grep.  No New software available is a STDERR message instead of STDOUT
-    rebootNeeded=`echo $updateList |grep -A1 \*|grep restart`
-    updatesNeeded=`echo $updateList |grep "No new software available"`
+    rebootNeeded=`echo "$updateList" |grep -A1 \*|grep restart`
+    updatesNeeded=`echo "$updateList" |grep "No new software available"`
     
     ##Run AppleSoftwareUpdates                                                                                                                                                                                                                                                                                                                                  
     if [[ ! $updatesNeeded =~ "No new software available" ]]; then
-	if [[ "$rebootneeded" == "" ]]; then
-	    notify "Applying Apple OS Updates..."
+	if [[ "$rebootNeeded" == "" ]]; then
+	        notify "Applying Apple OS Updates..."
             `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`   
-	else
-            asuReboot=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Updates require a reboot. Please reboot your computer to finalize updates." -button1 "Reboot" -button2 "Skip" defaultButton 1`
+	    else
+            asuReboot=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Updates require a reboot. Please reboot your computer to finalize updates." -button1 "Apply" -button2 "Skip" defaultButton 1`
             if [ $asuReboot == 0 ]; then
 		`/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
-		/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "Updates have been applied to your computer and require a reboot. Please reboot your computer to finalize updates."
+		#/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "Updates have been applied to your computer and require a reboot. Please reboot your computer using the Apple menu on the top left of your screen." -button1 "OK" defaultButton 1
             fi
-	fi
+	    fi
     else
 	echo "No Apple OS updates Needed"
     fi
@@ -103,8 +115,8 @@ runningapps(){
     else
 	result=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType utility -title "PEAS Updates" -heading "Programs in Use" -description "The application ${RUNNINGAPPSARRAY[@]} needs updating but it is in use.  Please quit that program and try again." -button2 "Skip" -button1 "Retry" -default button2`
 	if [ "$result" == "0" ]; then
-	    checkForUpdates
-	fi
+	        checkForUpdates
+		fi
     fi
 }
 
@@ -120,12 +132,12 @@ checkForUpdates(){
     RUNNINGAPPSARRAY=()
     
     #         App Name           App Path                    Location of ver vers      lastest ver     JamfPolicyToGetLatest    
-    update "GoogleChrome" "/Applications/Google Chrome.app" "CFBundleShortVersionString" "39.0.2171.99" "GoogleChrome"
-    update "Adobe Flash Player" "/Library/Internet Plug-Ins/Flash Player.plugin" "CFBundleShortVersionString" "16.0.0.257" "AdobeFlash"
+    update "GoogleChrome" "/Applications/Google Chrome.app" "CFBundleShortVersionString" "40.0.2214.111" "GoogleChrome"
+    update "Adobe Flash Player" "/Library/Internet Plug-Ins/Flash Player.plugin" "CFBundleShortVersionString" "16.0.0.305" "AdobeFlash"
     update "Firefox ESR" "/Applications/Firefox ESR.app" "CFBundleShortVersionString" "31.3.0" "FireFoxESR"
-    update "Firefox" "/Applications/Firefox.app" "CFBundleShortVersionString" "35.0" "FireFox"
+    update "Firefox" "/Applications/Firefox.app" "CFBundleShortVersionString" "35.0.1" "FireFox"
     update "Enterprise Vault" "/Library/PreferencePanes/Enterprise Vault.prefPane" "CFBundleShortVersionString" "11.0.1" "SymEV"
-    update "OracleJava7" "/Library/Internet Plug-Ins/JavaAppletPlugin.plugin" "CFBundleVersion" "1.8.25.17" "Java"
+    update "OracleJava7" "/Library/Internet Plug-Ins/JavaAppletPlugin.plugin" "CFBundleVersion" "1.8.31.13" "Java"
     update "Syncplicity" "/Applications/Syncplicity.app" "CFBundleVersion" "3.4.20.19" "Syncplicity"
     update "Cisco AnyConnect" "/Applications/Cisco/Cisco AnyConnect Secure Mobility Client.app" "CFBundleShortVersionString" "3.1" "CiscoVPN"
     update "Microsoft Office" "/Applications/Microsoft Office 2011" "CFBundleShortVersionString" "14.4.7" "OfficeUpdate"
@@ -146,3 +158,6 @@ updateAppleSW
 notify "Finalizing Updates"
 `/usr/sbin/jamf recon > /dev/null 2>&1`   
 notify "All Updates Have Completed."
+if [ $asuReboot == 0 ]; then
+    `/sbin/reboot`
+fi
