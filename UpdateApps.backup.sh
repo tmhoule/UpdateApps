@@ -72,13 +72,21 @@ updateAppleSW(){
     ##Run AppleSoftwareUpdates                                                                                                                                                                                                                                                                                                                                  
     if [[ ! $updatesNeeded =~ "No new software available" ]]; then
 	if [[ "$rebootNeeded" == "" ]]; then
+<<<<<<< HEAD:UpdateApps.backup.sh
 	        notify "Applying Apple OS Updates..."
+=======
+	    notify "Applying Apple OS Updates..."
+>>>>>>> FETCH_HEAD:UpdateAppsNoAPI.sh
             `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`   
 	    else
             asuReboot=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Updates require a reboot. Please reboot your computer to finalize updates." -button1 "Apply" -button2 "Skip" defaultButton 1`
             if [ $asuReboot == 0 ]; then
 		`/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
+<<<<<<< HEAD:UpdateApps.backup.sh
 		#/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "Updates have been applied to your computer and require a reboot. Please reboot your computer using the Apple menu on the top left of your screen." -button1 "OK" defaultButton 1
+=======
+	#	/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "Updates have been applied to your computer and require a reboot. Please reboot your computer to finalize updates."
+>>>>>>> FETCH_HEAD:UpdateAppsNoAPI.sh
             fi
 	    fi
     else
@@ -146,6 +154,11 @@ updateAppleSW
 notify "Finalizing Updates"
 `/usr/sbin/jamf recon > /dev/null 2>&1`   
 notify "All Updates Have Completed."
+<<<<<<< HEAD:UpdateApps.backup.sh
 if [ $asuReboot == 0 ]; then
     `/sbin/reboot`
+=======
+ if [ $asuReboot == 0 ]; then
+	`/sbin/reboot`
+>>>>>>> FETCH_HEAD:UpdateAppsNoAPI.sh
 fi
