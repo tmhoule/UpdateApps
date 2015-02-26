@@ -71,6 +71,7 @@ notify(){
 	/Library/Application\ Support/JAMF/Partners/PEAS-Notifier.app/Contents/MacOS/PEAS-Notifier -message "$message" -title "PEAS Updates"
     else
 	/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "$message" -timeout 5
+	sleep 2
    fi
 }
 
@@ -84,15 +85,14 @@ updateAppleSW(){
     ##Run AppleSoftwareUpdates                                                                                                                                                                                                                                                                                                                                  
     if [[ ! $updatesNeeded =~ "No new software available" ]]; then
 	if [[ "$rebootNeeded" == "" ]]; then
-	        notify "Applying Apple OS Updates..."
+	    notify "Applying Apple OS Updates..."
             `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`   
-	    else
-            asuReboot=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Updates require a reboot. Please reboot your computer to finalize updates." -button1 "Apply" -button2 "Skip" defaultButton 1`
+	else
+            asuReboot=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Apple Software Updates require a reboot. Please reboot your computer to finalize updates." -button1 "Apply" -button2 "Skip" defaultButton 1`
             if [ $asuReboot == 0 ]; then
 		`/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
-		#/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "Updates have been applied to your computer and require a reboot. Please reboot your computer using the Apple menu on the top left of your screen." -button1 "OK" defaultButton 1
             fi
-	    fi
+	fi
     else
 	echo "No Apple OS updates Needed"
     fi
@@ -127,7 +127,6 @@ runningapps(){
 ## JAMFPolicy is the name of the policy that will be run if local version is older than server version 
 checkForUpdates(){
     notify "Checking Applications for required updates."
-    sleep 2
     
     RUNNINGAPPSARRAY=()
     
@@ -135,7 +134,7 @@ checkForUpdates(){
     update "GoogleChrome" "/Applications/Google Chrome.app" "CFBundleShortVersionString" "40.0.2214.111" "GoogleChrome"
     update "Adobe Flash Player" "/Library/Internet Plug-Ins/Flash Player.plugin" "CFBundleShortVersionString" "16.0.0.305" "AdobeFlash"
     update "Firefox ESR" "/Applications/Firefox ESR.app" "CFBundleShortVersionString" "31.3.0" "FireFoxESR"
-    update "Firefox" "/Applications/Firefox.app" "CFBundleShortVersionString" "35.0.1" "FireFox"
+    update "Firefox" "/Applications/Firefox.app" "CFBundleShortVersionString" "36.0" "FireFox"
     update "Enterprise Vault" "/Library/PreferencePanes/Enterprise Vault.prefPane" "CFBundleShortVersionString" "11.0.1" "SymEV"
     update "OracleJava7" "/Library/Internet Plug-Ins/JavaAppletPlugin.plugin" "CFBundleVersion" "1.8.31.13" "Java"
     update "Syncplicity" "/Applications/Syncplicity.app" "CFBundleVersion" "3.4.20.19" "Syncplicity"
@@ -156,7 +155,10 @@ updateAppleSW
 
 notify "Finalizing Updates"
 `/usr/sbin/jamf recon > /dev/null 2>&1`   
-notify "All Updates Have Completed."
 if [ $asuReboot == 0 ]; then
+    notify "All Updates have completed.  Rebooting now"
+    sleep 5
     `/sbin/reboot`
+else
+    notify "All Updates have completed."
 fi
