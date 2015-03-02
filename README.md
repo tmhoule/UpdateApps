@@ -18,3 +18,11 @@ I recompiled Terminal-Notifier with a custom icon and called it PEAS-Notifier in
 
 NEW VERSIONS
 When an application has a new version released, update the policy for that application to install the new version.  Then update the script with the new version number.  
+
+ADDING A NEW APPLICAITON
+If you have a new program you would like to apply updates to, go to the bottom of the script and look for the paragraph of updates.  Create a new policy to deploy that program - be sure to include a 'custom' trigger.  Create a new line with the following information.
+1) An identifiiable application name
+2) The Path to find the program on the remote computer
+3) The plist entry that contains the version.  You can get this by typing the following in terminal "defaults read /Application/MyFavoiteapp.app/Contents/Info.plist" then read through the output to find the version string.  It is usally CFBundleShortVersionString, but not necessarily.  
+4) The latest version you have on your JSS
+5) The policy 'custom event' to invoke if user has an older version than what you just listed in #4.  

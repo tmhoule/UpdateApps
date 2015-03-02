@@ -65,14 +65,19 @@ update(){
 
 #### Routine to give feedback
 notify(){
+    loggedInUser=$( ls -l /dev/console | awk '{print $3}' )
     message="$1"
+
+    if [[ "$loggedInUser" != "root" ]]; then    #display box only if someone logged in                                                                                                                
+	
     #PEAS-Notifer is Todd's bastardized version of Terminal-Notifier app
-    if [ -f "/Library/Application Support/JAMF/Partners/PEAS-Notifier.app/Contents/MacOS/PEAS-Notifier" ]; then
-	/Library/Application\ Support/JAMF/Partners/PEAS-Notifier.app/Contents/MacOS/PEAS-Notifier -message "$message" -title "PEAS Updates"
-    else
-	/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "$message" -timeout 5
-	sleep 2
-   fi
+	if [ -f "/Library/Application Support/JAMF/Partners/PEAS-Notifier.app/Contents/MacOS/PEAS-Notifier" ]; then
+	    /Library/Application\ Support/JAMF/Partners/PEAS-Notifier.app/Contents/MacOS/PEAS-Notifier -message "$message" -title "PEAS Updates"
+	else
+	    /Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "$message" -timeout 5
+	    sleep 2
+	fi
+    fi
 }
 
 
@@ -147,6 +152,7 @@ checkForUpdates(){
     update "Microsoft Office" "/Applications/Microsoft Office 2011" "CFBundleShortVersionString" "14.4.8" "OfficeUpdate"
     update "Adobe Acrobat" "/Applications/Adobe Acrobat XI Pro/Adobe Acrobat Pro.app" "CFBundleShortVersionString" "11.0.10" "AcrobatProUpdate"
     update "VLC" "/Applications/VLC.app" "CFBundleShortVersionString" "2.2.0" "vlc"
+    update "FileMaker Pro 13" "/Applications/FileMaker Pro 13/FileMaker Pro.app" "CFBundleShortVersionString"  "13.0.5" "filemaker13update"
     runningapps   #presents option to retry apps that were running
 }
 
