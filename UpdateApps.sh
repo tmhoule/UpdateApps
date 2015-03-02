@@ -81,14 +81,19 @@ updateAppleSW(){
     updateList=`softwareupdate -l 2>&1`  #2>&1 redirects stderr to stdout so it'll be available to grep.  No New software available is a STDERR message instead of STDOUT
     rebootNeeded=`echo "$updateList" |grep -A1 \*|grep restart`
     updatesNeeded=`echo "$updateList" |grep "No new software available"`
+    loggedInUser=$( ls -l /dev/console | awk '{print $3}' )    
     
-    ##Run AppleSoftwareUpdates                                                                                                                                                                                                                                                                                                                                  
+     ##Run AppleSoftwareUpdates                                                                                                                                                                                                                                                                                                                                  
     if [[ ! $updatesNeeded =~ "No new software available" ]]; then
 	if [[ "$rebootNeeded" == "" ]]; then
 	    notify "Applying Apple OS Updates..."
             `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`   
 	else
+	    if [[ "$loggedInUser" != "root" ]]; then
             asuReboot=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Apple Software Updates require a reboot. Please reboot your computer to finalize updates." -button1 "Apply" -button2 "Skip" defaultButton 1`
+	    else 
+		$asuReboot = 0
+	    fi
             if [ $asuReboot == 0 ]; then
 		`/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
             fi
@@ -140,6 +145,7 @@ checkForUpdates(){
     update "Syncplicity" "/Applications/Syncplicity.app" "CFBundleVersion" "3.4.20.19" "Syncplicity"
     update "Cisco AnyConnect" "/Applications/Cisco/Cisco AnyConnect Secure Mobility Client.app" "CFBundleShortVersionString" "3.1" "CiscoVPN"
     update "Microsoft Office" "/Applications/Microsoft Office 2011" "CFBundleShortVersionString" "14.4.8" "OfficeUpdate"
+    update "Adobe Acrobat" "/Applications/Adobe Acrobat XI Pro/Adobe Acrobat Pro.app" "CFBundleShortVersionString" "11.0.10" "AcrobatProUpdate"
     runningapps   #presents option to retry apps that were running
 }
 
