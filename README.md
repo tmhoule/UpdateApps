@@ -1,15 +1,20 @@
 # UpdateApps
-Update apps by comparing versions on the JSS
+Update apps by comparing versions to versions listed in this script.
 
 ABOUT
 This script will check the version of applications installed on a workstation.  If a newer version is available, if the application is installed and not in use, the script will update it.  
 
 IMPLEMENTATION
-At the bottom of the script is a list of 'Update' lines.  You'll need to change the last two parts of each of those lines.  The 2nd to last part is the 'latest version'.  That's the latest version of the program that is on the JSS Server.  The last part of that is the JSS Custom trigger to update that app.  
+Create a policy in your JSS for each application you want to update.  For example, if you want FireFox updated on each computer, create a policy called 'update firefox'.  Create a custom trigger for that policy with a name of your choice such as 'updatefirefoxstandard'.
 
-So Install a new app on your JSS, say Firefox which has weekly updates.  Create a policy to install that program with a custom trigger (for example, InstallFireFox).  You'll also need to put the VersionCompare.py script available.  I put it in my file repository, then had the script download it.  You can come up with your own solution depending on your environment.  Finally update the 'update' line at the bottom of this script with the new version of Firefox.  Then run this script.  If the machine has an older version, this script will run the policy 'InstallFireFox' which will install the new version.  It then runs AppleSoftwareUpdate and notifies the user if a reboot is needed.  
+Create a policy to install versioncompare.py on workstation.  Update the UpdateApps.sh script to point to the path where it is installed.  By default UpdateApps.sh looks in /Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py.  Chage the two lines at the top of the script to point to the location of VersionCompare.py on your machines.  
 
-You'll also need to make sure VersionCompare.py is on each machine.  I use a JAMF policy to pull it down if it is not in a specific directory on the Mac.  You can handle that requirement as appropriate for your envioronment. 
+At the bottom of the script is a list of 'Update' lines.  You'll need to change the last two parts of each of those lines.  The 2nd to last part is the 'latest version'.  That's the latest version of the program that is on the JSS Server.  The last part of that is the JSS Custom trigger to update that app.  In the example above, that is called 'updatefirefoxstandard'.  If the user's workstation has an older version of firefox installed on their machine as compared to the version in the script, then the 'udpatefirefoxstand' policy will be called.
+
+AppleSoftwareUpdate will be run at the end to install Apple supplied updates.
 
 ADDITIONAL TOOLS
-I recompiled Terminal-Notifier with a custom icon and called it PEAS-Notifier in our environment.  This script will look for that program.  If it not available, it will use JamfHelper.  It is optional
+I recompiled Terminal-Notifier with a custom icon and called it PEAS-Notifier in our environment.  This script will look for that program.  If it not available, it will use JamfHelper.  PEAS-Notifier is optional.
+
+NEW VERSIONS
+When an application has a new version released, update the policy for that application to install the new version.  Then update the script with the new version number.  

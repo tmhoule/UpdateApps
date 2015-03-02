@@ -89,9 +89,9 @@ updateAppleSW(){
 	    notify "Applying Apple OS Updates..."
             `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`   
 	else
-	    if [[ "$loggedInUser" != "root" ]]; then
+	    if [[ "$loggedInUser" != "root" ]]; then    #display box only if someone logged in
             asuReboot=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Apple Software Updates require a reboot. Please reboot your computer to finalize updates." -button1 "Apply" -button2 "Skip" defaultButton 1`
-	    else 
+	    else    #if nobody is logged in, then just run ASU!
 		$asuReboot = 0
 	    fi
             if [ $asuReboot == 0 ]; then
