@@ -33,7 +33,7 @@ update(){
 	# Install update if needed
 	if [[ -d $appPath ]]; then
 	        if [[ $(/Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py $latestVersion $installedVersion) -eq 1 ]] || [[ -L $appPath ]]; then
-		    if [[ `ps auxw | grep "$appPath" | grep -v "Syncplicity" |grep -v "Database Daemon"|grep -v grep` == "" ]]; then
+		    if [[ `ps auxw | grep "$appPath" | grep -v "Syncplicity" |grep -v "Database Daemon"| grep -v "Java Updater.app" |grep -v grep` == "" ]]; then
 			if [[ "$appPath" == "/Applications/Microsoft Office 2011" ]]; then
 			    if [[ `ps auxw |grep -i chrome | grep -v grep` == "" ]] && [[ `ps auxw |grep -i firefox | grep -v grep` == "" ]]; then
 				notify "$appName is being updated to version $latestVersion"
@@ -146,6 +146,7 @@ checkForUpdates(){
     update "Cisco AnyConnect" "/Applications/Cisco/Cisco AnyConnect Secure Mobility Client.app" "CFBundleShortVersionString" "3.1" "CiscoVPN"
     update "Microsoft Office" "/Applications/Microsoft Office 2011" "CFBundleShortVersionString" "14.4.8" "OfficeUpdate"
     update "Adobe Acrobat" "/Applications/Adobe Acrobat XI Pro/Adobe Acrobat Pro.app" "CFBundleShortVersionString" "11.0.10" "AcrobatProUpdate"
+    update "VLC" "/Applications/VLC.app" "CFBundleShortVersionString" "2.2.0" "vlc"
     runningapps   #presents option to retry apps that were running
 }
 
