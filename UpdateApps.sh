@@ -2,14 +2,17 @@
 # Original version written by Jason at Newton Public Schools
 # Updated and Modified by Todd Houle at Partners Healthcare
 # 1-20-2015
+# 4-30-2015- fix apple softwareupdate function, and reboot
 # UpdateApps.sh
 
 
 # Copy down VersionCompare.py for later use.  It is used to compare versions of software to know if they need updating
 if [ ! -f "/Library/Application Support/JAMF/Partners/Library/Scripts/VersionCompare.py" ]; then
+    logger "UpdateApps: VersionCompare Needed.  Installing now.."
     jamf policy -event versioncompare
 fi
 chmod +x /Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py
+
 
 logger "UpdateApps: Starting"
 ### Define function for updating most apps###
@@ -25,45 +28,46 @@ update(){
 	# Only do all of this if the app is installed and is not currently running
 	    # Define version installed on local machine
 	if [ "$appName" == "Microsoft Office" ]; then
-	            installedVersion=`defaults read "$appPath/Microsoft Word.app/Contents/Info.plist" |grep "$versionString" |awk '{print $3}'|sed -e 's/\"//g'|sed -e 's/;//g'`
-		    else
-	            installedVersion=`defaults read "$appPath/Contents/Info.plist" | grep "$versionString" |awk '{print $3}'|sed -e 's/\"//g'|sed -e 's/;//g'`
-		    fi
+	    installedVersion=`defaults read "$appPath/Microsoft Word.app/Contents/Info.plist" |grep "$versionString" |awk '{print $3}'|sed -e 's/\"//g'|sed -e 's/;//g'`
+	else
+	    installedVersion=`defaults read "$appPath/Contents/Info.plist" | grep "$versionString" |awk '{print $3}'|sed -e 's/\"//g'|sed -e 's/;//g'`
+	fi
 	# For logging - print out current version
 	echo ">>>Currently installed version of $appName is $installedVersion"
 	# Install update if needed
 	if [[ -d $appPath ]]; then
-	            if [[ $(/Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py $latestVersion $installedVersion) -eq 1 ]] || [[ -L $appPath ]]; then
-			    if [[ `ps auxw | grep "$appPath" | grep -v "Syncplicity" |grep -v "Database Daemon"| grep -v "Java Updater.app" |grep -v grep` == "" ]]; then
-				if [[ "$appPath" == "/Applications/Microsoft Office 2011" ]]; then
-				        if [[ `ps auxw |grep -i chrome | grep -v grep` == "" ]] && [[ `ps auxw |grep -i firefox | grep -v grep` == "" ]]; then
-					    notify "$appName is being updated to version $latestVersion"
-                                echo ">>>Update of $appName is needed. Installing $appName $latestVersion"
-				/usr/sbin/jamf policy -event $policyToRun
-				logger "UpdateApps: PEAS Updater is updating $appName"
-				
-				    else
-					    notify "FireFox or Chrome cannot be running when updating MS Office.  Please close them and try again"
-					        fi
-					else
-				        logger "UpdateApps: $appName is being updated to version $latestVersion"
-				        notify "$appName is being updated to version $latestVersion"
-					    echo ">>>Update of $appName is needed. Installing $appName $latestVersion"
-					        /usr/sbin/jamf policy -event $policyToRun
-						    logger "UpdateApps: PEAS Updater is updating $appName"
-						    fi
-				    else
-				logger "UpdateApps: $appPath is currently running. Cannot update."
-				echo ">>>$appPath is currently running. Cannot update."
-				RUNNINGAPPSARRAY+=("$appName")
-				    fi
-			    else
-			        logger "UpdateApps: no update of $appName is needed"
-			        echo ">>>No update of $appName is needed."
-			    fi
+	    if [[ $(/Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py $latestVersion $installedVersion) -eq 1 ]] || [[ -L $appPath ]]; then
+		if [[ `ps auxw | grep "$appPath" | grep -v "Syncplicity" |grep -v "Database Daemon"| grep -v "Java Updater.app" |grep -v grep` == "" ]]; then
+		    if [[ "$appPath" == "/Applications/Microsoft Office 2011" ]]; then
+			if [[ `ps auxw |grep -i chrome | grep -v grep` == "" ]] && [[ `ps auxw |grep -i firefox | grep -v grep` == "" ]]; then
+			    notify "$appName is being updated to version $latestVersion"
+                            echo ">>>Update of $appName is needed. Installing $appName $latestVersion"
+			    /usr/sbin/jamf policy -event $policyToRun
+			    logger "UpdateApps: PEAS Updater is updating $appName"
+			    
+			else
+			    notify "FireFox or Chrome cannot be running when updating MS Office.  Please close them and try again"
+			fi
 		    else
-	        echo ">>>$appPath is not installed on this machine"
+			logger "UpdateApps: $appName is being updated to version $latestVersion"
+			notify "$appName is being updated to version $latestVersion"
+			echo ">>>Update of $appName is needed. Installing $appName $latestVersion"
+			/usr/sbin/jamf policy -event $policyToRun
+			logger "UpdateApps: PEAS Updater is updating $appName"
+		    fi
+		else
+		    logger "UpdateApps: $appPath is currently running. Cannot update."
+		    echo ">>>$appPath is currently running. Cannot update."
+		    RUNNINGAPPSARRAY+=("$appName")
 		fi
+	    else
+		logger "UpdateApps: no update of $appName is needed"
+		echo ">>>No update of $appName is needed."
+	    fi
+	else
+	    echo ">>>$appPath is not installed on this machine"
+	    logger "UpdateApps: $appPath is not installed on this machine"
+	fi
 }
 
 
@@ -75,12 +79,13 @@ notify(){
     if [[ "$loggedInUser" != "root" ]]; then    #display box only if someone logged in                                                                                                                
 	
     #PEAS-Notifer is Todd's bastardized version of Terminal-Notifier app
-	if [ -f "/Library/Application Support/JAMF/Partners/PEAS-Notifier.app/Contents/MacOS/PEAS-Notifier" ]; then
-	        /Library/Application\ Support/JAMF/Partners/PEAS-Notifier.app/Contents/MacOS/PEAS-Notifier -message "$message" -title "PEAS Updates"
-		else
-	        /Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "$message" -timeout 5
-		    sleep 2
-		    fi
+        #terminal notifer doesn't work when called via CheckIn, only when called (direct or indirect) by the user.
+	#if [ -f "/Library/Application Support/JAMF/Partners/PEAS-Notifier.app/Contents/MacOS/PEAS-Notifier" ]; then
+	#        /Library/Application\ Support/JAMF/Partners/PEAS-Notifier.app/Contents/MacOS/PEAS-Notifier -message "$message" -title "PEAS Updates"
+	#	else
+	/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "PEAS Software Updates" -description "$message" -timeout 3
+	sleep 1
+	#	    fi
     fi
 }
 
@@ -94,26 +99,27 @@ updateAppleSW(){
     
      ##Run AppleSoftwareUpdates 
 
+    asuReboot=5
     logger "UpdateApps: Processing Apple Software Updates"
     if [[ ! $updatesNeeded =~ "No new software available" ]]; then
-	if [[ "$rebootNeeded" == "" ]]; then
-	        notify "Applying Apple OS Updates..."
-            `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`   
-	    else
-	        if [[ "$loggedInUser" != "root" ]]; then    #display box only if someone logged in
-            asuReboot=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Apple Software Updates require a reboot. Please reboot your computer to finalize updates." -button1 "Apply" -button2 "Skip" defaultButton 1`
-	        else    #if nobody is logged in, then just run ASU!
-		    $asuReboot = 0
-		        fi
-            if [ $asuReboot == 0 ]; then
-		`/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
+        if [[ "$rebootNeeded" == "" ]]; then
+            notify "Applying Apple OS Updates..."
+            `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
+        else
+            if [[ "$loggedInUser" != "root" ]]; then    #display box only if someone logged in                                                                                                                                           
+                $asuReboot=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Apple Software Updates require a reboot. Please reboot your computer to finalize updates." -button1 "Apply" -button2 "Skip" defaultButton 1`
+            else    #if nobody is logged in, then just run ASU!                                                                                                                                                                          
+                $asuReboot=0
             fi
-	    fi
+	    
+            if [ "$asuReboot" -eq "0" ]; then
+                `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
+            fi
+        fi
     else
-	echo "No Apple OS updates Needed"
+        echo "No Apple OS updates Needed"
     fi
 }
-
 
 
 ### routine to respond if an app was running and couldn't be updated.
@@ -123,6 +129,7 @@ runningapps(){
 
     if [[ $count -eq 0 ]]; then
 	echo ">> No in use programs need updating.  Awesome!"
+	logger "UpdateApps: No in use programs need updating.  Awesome!"
     elif [[ $count -ge 2 ]]; then
         result=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType utility -title "PEAS Updates" -heading "Programs in Use" -description "The applications $inUseApps need updating but are in use.  Please quit those programs and try again." -button2 "Skip" -button1 "Retry" -default button2`
         if [ "$result" == "0" ]; then
@@ -131,8 +138,8 @@ runningapps(){
     else
 	result=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType utility -title "PEAS Updates" -heading "Programs in Use" -description "The application ${RUNNINGAPPSARRAY[@]} needs updating but it is in use.  Please quit that program and try again." -button2 "Skip" -button1 "Retry" -default button2`
 	if [ "$result" == "0" ]; then
-	            checkForUpdates
-		    fi
+	    checkForUpdates
+	fi
     fi
 }
 
@@ -172,13 +179,14 @@ checkForUpdates  #routine to check and update apps
 ### At end, call function for Apple updates  
 updateAppleSW
 
-logger "UpdateApps: Complete.  Rebooting if necessary"
 notify "Finalizing Updates"
 `/usr/sbin/jamf recon > /dev/null 2>&1`   
-if [ $asuReboot == 0 ]; then
+if [[ $asuReboot -eq 0 ]]; then
     notify "All Updates have completed.  Rebooting now"
+    logger "UpdateApps: Complete.  Rebooting.."
     sleep 5
-    `/sbin/reboot`
+#    `/sbin/reboot`
 else
     notify "All Updates have completed."
+    logger "UpdateApps: Complete."
 fi
