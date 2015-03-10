@@ -13,8 +13,7 @@ if [ ! -f "/Library/Application Support/JAMF/Partners/Library/Scripts/VersionCom
 fi
 chmod +x /Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py
 
-
-logger "UpdateApps: Starting"
+logger "UpdateApps: Starting 31015.1143"
 ### Define function for updating most apps###
 update(){
     # Rename function arguments for easier reference
@@ -99,20 +98,22 @@ updateAppleSW(){
     
      ##Run AppleSoftwareUpdates 
 
-    asuReboot=5
+    asuReboot="5"  #set with default value to not reboot.
     logger "UpdateApps: Processing Apple Software Updates"
     if [[ ! $updatesNeeded =~ "No new software available" ]]; then
         if [[ "$rebootNeeded" == "" ]]; then
-            notify "Applying Apple OS Updates..."
+            notify "Applying Required Apple OS Updates..."
             `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
         else
             if [[ "$loggedInUser" != "root" ]]; then    #display box only if someone logged in                                                                                                                                           
-                $asuReboot=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Apple Software Updates require a reboot. Please reboot your computer to finalize updates." -button1 "Apply" -button2 "Skip" defaultButton 1`
-            else    #if nobody is logged in, then just run ASU!                                                                                                                                                                          
-                $asuReboot=0
+                /Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Apple Software Updates require a reboot. Please reboot your computer to finalize updates." -button1 "Apply" -button2 "Skip" defaultButton 1
+		asuReboot=$?
+            else    #if nobody is logged in, then just run ASU!   
+                $asuReboot="0"
             fi
-	    
-            if [ "$asuReboot" -eq "0" ]; then
+
+	    logger "UpdateApps: DEBUG: ASUReboot is $asuReboot"
+	    if [ "$asuReboot" == "0" ]; then
                 `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
             fi
         fi
@@ -180,12 +181,13 @@ checkForUpdates  #routine to check and update apps
 updateAppleSW
 
 notify "Finalizing Updates"
+logger "UpdateApps: Finalizing updates with Recon"
 `/usr/sbin/jamf recon > /dev/null 2>&1`   
-if [[ $asuReboot -eq 0 ]]; then
+if [ "$asuReboot" == "0" ]; then
     notify "All Updates have completed.  Rebooting now"
     logger "UpdateApps: Complete.  Rebooting.."
     sleep 5
-#    `/sbin/reboot`
+    `/sbin/reboot`
 else
     notify "All Updates have completed."
     logger "UpdateApps: Complete."
