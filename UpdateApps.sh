@@ -36,16 +36,27 @@ update(){
 	# Install update if needed
 	if [[ -d $appPath ]]; then
 	    if [[ $(/Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py $latestVersion $installedVersion) -eq 1 ]] || [[ -L $appPath ]]; then
-		if [[ `ps auxw | grep "$appPath" | grep -v "Syncplicity" |grep -v "Database Daemon"| grep -v "Java Updater.app" |grep -v grep` == "" ]]; then
+		if [[ `ps auxw | grep "$appPath" | grep -v "Syncplicity" |grep -v "Database Daemon"| grep -v "Microsoft AutoUpdate" |grep -v "SyncServicesAgent"|grep -v "Java Updater.app" |grep -v grep` == "" ]]; then
 		    if [[ "$appPath" == "/Applications/Microsoft Office 2011" ]]; then
 			if [[ `ps auxw |grep -i chrome | grep -v grep` == "" ]] && [[ `ps auxw |grep -i firefox | grep -v grep` == "" ]]; then
 			    notify "$appName is being updated to version $latestVersion"
                             echo ">>>Update of $appName is needed. Installing $appName $latestVersion"
 			    /usr/sbin/jamf policy -event $policyToRun
 			    logger "UpdateApps: PEAS Updater is updating $appName"
-			    
 			else
 			    notify "FireFox or Chrome cannot be running when updating MS Office.  Please close them and try again"
+			fi
+		    elif [[ "$appPath" == "/Applications/Firefox.app" ]]; then
+			#if running Firefox, see if it is ESR version.  If so, rename it and move on.
+                        esrTrue=`cat /Applications/Firefox.app/Contents/MacOS/application.ini |grep SourceRepository|grep esr`
+			if [ -z $esrTrue ]; then    #-z means if variable is null(it's not ESR version)
+			    logger "UpdateApps: $appName is being updated to version $latestVersion"
+                            notify "$appName is being updated to version $latestVersion"
+                            echo ">>>Update of $appName is needed. Installing $appName $latestVersion"
+                            /usr/sbin/jamf policy -event $policyToRun
+                            logger "UpdateApps: PEAS Updater is updating $appName"
+			else
+			  `mv /Applications/FireFox.app /Applications/Firefox\ ESR.app`
 			fi
 		    else
 			logger "UpdateApps: $appName is being updated to version $latestVersion"
