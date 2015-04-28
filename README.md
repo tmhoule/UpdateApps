@@ -13,9 +13,6 @@ At the bottom of the script is a list of 'Update' lines.  You'll need to change 
 
 AppleSoftwareUpdate will be run at the end to install Apple supplied updates.
 
-ADDITIONAL TOOLS
-I recompiled Terminal-Notifier with a custom icon and called it PEAS-Notifier in our environment.  This script will look for that program.  If it not available, it will use JamfHelper.  PEAS-Notifier is optional.
-
 NEW VERSIONS
 When an application has a new version released, update the policy for that application to install the new version.  Then update the script with the new version number.  
 
@@ -26,3 +23,9 @@ If you have a new program you would like to apply updates to, go to the bottom o
 3) The plist entry that contains the version.  You can get this by typing the following in terminal "defaults read /Application/MyFavoiteapp.app/Contents/Info.plist" then read through the output to find the version string.  It is usally CFBundleShortVersionString, but not necessarily.  
 4) The latest version you have on your JSS
 5) The policy 'custom event' to invoke if user has an older version than what you just listed in #4.  
+
+USER NOTIFICATIONS
+You can set the verbosity of the program now (April, 2015). Users are able to decide how verbose the script should be.  Type the following on each workstation (or use another method to set it)
+      sudo defaults write /Library/Preferences/org.Partners.PEASManagement.plist updateAppVerbosity -int 3
+Where the final number (the three as above) is the verbosity of the program.  1 is quite silent,  3 is notifications,   5 is very verbose.  
+
