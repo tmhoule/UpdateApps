@@ -13,7 +13,7 @@ if [ ! -f "/Library/Application Support/JAMF/Partners/Library/Scripts/VersionCom
 fi
 chmod +x /Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py
 
-logger "UpdateApps: Starting 31015.1143"
+logger "UpdateApps: Starting 42815.1305"
 ### Define function for updating most apps###
 update(){
     # Rename function arguments for easier reference
@@ -99,7 +99,10 @@ notify(){
 
 
 updateAppleSW(){
-#    notify "Checking Apple OS Software."
+    notify "Checking for Apple Software Updates." 5
+    logger "UpdateApps: Processing Apple Software Updates"
+    echo "Checking for Apple Software Updates"
+
     updateList=`softwareupdate -l 2>&1`  #2>&1 redirects stderr to stdout so it'll be available to grep.  No New software available is a STDERR message instead of STDOUT
     rebootNeeded=`echo "$updateList" |grep -A1 \*|grep restart`
     updatesNeeded=`echo "$updateList" |grep "No new software available"`
@@ -108,12 +111,11 @@ updateAppleSW(){
      ##Run AppleSoftwareUpdates 
     
     asuReboot="5"  #set with default value to not reboot.
-    logger "UpdateApps: Processing Apple Software Updates"
-    notify "Checking for Apple Software Updates." 5
     if [[ ! $updatesNeeded =~ "No new software available" ]]; then
         if [[ "$rebootNeeded" == "" ]]; then
             notify "Applying Required Apple OS Updates..." 5
             `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
+	    logger "UpdateApps: Applying Apple Software Updates"
         else
             if [[ "$loggedInUser" != "root" ]]; then    #display box only if someone logged in 
                 /Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Apple Software Updates require a reboot. Click Apply to install updates.  The computer will REBOOT AUTOMATICALLY when updates have been installed." -button1 "Apply" -button2 "Skip" defaultButton 1
@@ -199,7 +201,7 @@ if ! [[ $userVerbosityChoice =~ $re ]] ; then
 fi
 logger "UpdateApps: User selected verbosity is $userVerbosityChoice"
 
-notify "Beginning Application Updates!" 5
+notify "Beginning Application Updates...  Checking Applications." 5
 
 checkForUpdates  #routine to check and update apps
 
@@ -211,10 +213,10 @@ logger "UpdateApps: Finalizing updates with Recon"
 `/usr/sbin/jamf recon > /dev/null 2>&1`   
 if [ "$asuReboot" == "0" ]; then
     notify "All Updates have completed.  Rebooting now!" 1
-    logger "UpdateApps: Complete.  Rebooting.."
+    logger "UpdateApps: Completed.  Rebooting.."
     sleep 5
     `/sbin/reboot`
 else
     notify "All Updates have completed." 5
-    logger "UpdateApps: Complete."
+    logger "UpdateApps: Completed."
 fi
