@@ -192,7 +192,7 @@ checkForUpdates(){
 #Example: defaults write /Library/Preferences/org.Partners.PEASManagement.plist updateAppVerbosity 3
 userVerbosityChoice=`defaults read /Library/Preferences/org.Partners.PEASManagement.plist updateAppVerbosity`
 if [ -z $userVerbosityChoice ]; then    #-z means if variable is null(noVerbosity defined by user)
-    $userVerbosityChoice=3
+    userVerbosityChoice=3
 fi
 re='^[1-5]+$'  #defines regular expression to validate verbosity is number as expected.
 if ! [[ $userVerbosityChoice =~ $re ]] ; then
