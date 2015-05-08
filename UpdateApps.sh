@@ -5,6 +5,7 @@
 # 1-20-2015
 # 3-30-2015  fix apple softwareupdate function, and reboot
 # 4-28-2015  Added Notification level options.
+# 5-8-2015  Adding logging and use TermianlNotifier
 # UpdateApps.sh
 
 #Functions here.  Code below.
