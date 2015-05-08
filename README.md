@@ -25,15 +25,7 @@ If you have a new program you would like to apply updates to, go to the bottom o
 5) The policy 'custom event' to invoke if user has an older version than what you just listed in #4.  
 
 USER NOTIFICATIONS
-<<<<<<< HEAD
 Now uses Peas-Notifier (a recompiled verison of Terminal Notifier).  Logging is now in /var/log/PeasAutoUpdateslog.log
 
 Verbosity disabled: May2015  
-/* You can set the verbosity of the program now (April, 2015). Users are able to decide how verbose the script should be.  Type the following on each workstation (or use another method to set it)
-=======
 May, 2015: Now using Apple Notification Center, so verbosity was disabled.  Nicer messages mean less reason to reduce verbosity.
-You can set the verbosity of the program now (April, 2015). Users are able to decide how verbose the script should be.  Type the following on each workstation (or use another method to set it)
->>>>>>> origin/master
-      sudo defaults write /Library/Preferences/org.Partners.PEASManagement.plist updateAppVerbosity -int 3
-Where the final number (the three as above) is the verbosity of the program.  1 is quite silent,  3 is notifications,   5 is very verbose.  */
-
