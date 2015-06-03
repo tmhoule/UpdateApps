@@ -120,14 +120,17 @@ updateAppleSW(){
     
     asuReboot="5"  #set with default value to not reboot.
     if [[ ! $updatesNeeded =~ "No new software available" ]]; then
+        writeToLog "UpdateApps - UPDATE: Applying Apple Software Updates"
         if [[ "$rebootNeeded" == "" ]]; then
             notify "Applying Required Apple OS Updates..." 5
             `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
-	    writeToLog "UpdateApps - UPDATE: Applying Apple Software Updates"
         else
             if [[ "$loggedInUser" != "root" ]]; then    #display box only if someone logged in 
                 /Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Apple Software Updates require a reboot. Click Apply to install updates.  The computer will REBOOT AUTOMATICALLY when updates have been installed." -button1 "Apply" -button2 "Skip" defaultButton 1
 		asuReboot=$?
+		if [ "$asuReboot" != "0" ]; then
+		    writeToLog "UpdateApps: Apple Updates Skipped"
+		fi
             else    #if nobody is logged in, then just run ASU!   
                 $asuReboot="0"
             fi
@@ -195,7 +198,7 @@ checkForUpdates(){
 ##########################################################
 #setup Logs
 logfileName="/var/log/PeasAutoUpdatesLog.log"
-writeToLog "___________________________________________"
+writeToLog "___________________________________________\n"
 writeToLog "UpdateApps: Starting 1430922037"
 
 # Copy down VersionCompare.py for later use.  It is used to compare versions of software to know if they need updating  
@@ -231,10 +234,10 @@ updateAppleSW
 if [ "$asuReboot" == "0" ]; then
     notify "All Updates have completed.  Rebooting now!" 1
     writeToLog "UpdateApps: Completed.  Rebooting.."
-    echo "___________________________________________" >> $logfileName
+    echo "___________________________________________\n" >> $logfileName
     sleep 5
     `/sbin/reboot`
 else
     writeToLog "UpdateApps: Completed."
-    echo "___________________________________________" >> $logfileName
+    echo "___________________________________________\n" >> $logfileName
 fi
