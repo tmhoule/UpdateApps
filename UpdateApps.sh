@@ -81,7 +81,7 @@ update(){
 
 
 #### Routine to give feedback
-#call using format:    notify  "Message Goes Here" INT    :where INT is the priority of the message.
+#call using format:    notify  "Message Goes Here" 
 notify(){
     ## Path to terminal-notifier (or custom version)                                                                                                                                                              
     TNapp="/Library/Application Support/JAMF/Partners/PEAS-Notifier.app/Contents/MacOS/PEAS-Notifier"
@@ -90,8 +90,7 @@ notify(){
     Title="PEAS Notice"
     Msg=$1
     Action="-activate"                           ## Action for click-back, i.e, -activate, -open -url, etc.                                                                                                       
-    ClickBack="org.partners.PEAS-Updates-Manager"     ## String for Action function, i.e, BundleID, URL, etc.                                                                                                          
-    verbosity="$2"    
+    ClickBack="org.partners.PEAS-Updates-Manager"     ## String for Action function, i.e, BundleID, URL, etc.  
 
     ## Get the logged in user                                                                                                                                                                                     
     loggedInUser=$(ls -l /dev/console | awk '{print $3}')
@@ -100,10 +99,8 @@ notify(){
     loggedInPID=$(ps -axj | awk "/^$loggedInUser/ && /Dock.app/ {print \$2;exit}")
     
     if [[ "$loggedInUser" != "root" ]]; then    #display box only if someone logged in
-#	if [ $userVerbosityChoice -ge $verbosity ]; then
             ## Run terminal-notifier                                                                                                                                                                                      
 	    /bin/launchctl bsexec "${loggedInPID}" sudo -iu "${loggedInUser}" "\"$TNapp\" -title \"$Title\" -message \"$Msg\" $Action \"$ClickBack\""
-#	fi
     fi
 }
 
@@ -126,8 +123,7 @@ updateAppleSW(){
             `/usr/sbin/softwareupdate -ir > /dev/null 2>&1`
         else
             if [[ "$loggedInUser" != "root" ]]; then    #display box only if someone logged in 
-                /Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Apple Software Updates require a reboot. Click Apply to install updates.  The computer will REBOOT AUTOMATICALLY when updates have been installed." -button1 "Apply" -button2 "Skip" defaultButton 1
-		asuReboot=$?
+                asuReboot=`/Library/Application\ Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper -windowType hud -windowPosition ll -title "PEAS Updates" -heading "Reboot Required" -description "Apple Software Updates require a reboot. Click Apply to install updates.  The computer will REBOOT AUTOMATICALLY when updates have been installed." -button1 "Apply" -button2 "Skip" defaultButton 1`
 		if [ "$asuReboot" != "0" ]; then
 		    writeToLog "UpdateApps: Apple Updates Skipped"
 		fi
@@ -177,19 +173,21 @@ checkForUpdates(){
     RUNNINGAPPSARRAY=()
     
     #         App Name           App Path                    Location of ver vers      lastest ver     JamfPolicyToGetLatest    
-    update "GoogleChrome" "/Applications/Google Chrome.app" "CFBundleShortVersionString" "42.0.2311.90" "GoogleChrome"
-    update "Adobe Flash Player" "/Library/Internet Plug-Ins/Flash Player.plugin" "CFBundleShortVersionString" "17.0.0.169" "AdobeFlash"
-    update "Firefox ESR" "/Applications/Firefox ESR.app" "CFBundleShortVersionString" "31.6.0" "FireFoxESR"
-    update "Firefox" "/Applications/Firefox.app" "CFBundleShortVersionString" "37.0.1" "FireFox"
+    update "GoogleChrome" "/Applications/Google Chrome.app" "CFBundleShortVersionString" "43.0.2357.130" "GoogleChrome"
+    update "Adobe Flash Player" "/Library/Internet Plug-Ins/Flash Player.plugin" "CFBundleShortVersionString" "18.0.0.194" "AdobeFlash"
+    update "Firefox ESR" "/Applications/Firefox ESR.app" "CFBundleShortVersionString" "31.7.0" "FireFoxESR"
+    update "Firefox" "/Applications/Firefox.app" "CFBundleShortVersionString" "38.0.5" "FireFox"
     update "Enterprise Vault" "/Library/PreferencePanes/Enterprise Vault.prefPane" "CFBundleShortVersionString" "11.0.1" "SymEV"
     update "OracleJava7" "/Library/Internet Plug-Ins/JavaAppletPlugin.plugin" "CFBundleVersion" "1.8.45.14" "Java"
     update "Syncplicity" "/Applications/Syncplicity.app" "CFBundleVersion" "3.5.2.28" "Syncplicity"
     update "Cisco AnyConnect" "/Applications/Cisco/Cisco AnyConnect Secure Mobility Client.app" "CFBundleShortVersionString" "3.1" "CiscoVPN"
-    update "Microsoft Office" "/Applications/Microsoft Office 2011" "CFBundleShortVersionString" "14.4.9" "OfficeUpdate"
+    update "Microsoft Office" "/Applications/Microsoft Office 2011" "CFBundleShortVersionString" "14.5.2" "OfficeUpdate"
     update "Adobe Acrobat" "/Applications/Adobe Acrobat XI Pro/Adobe Acrobat Pro.app" "CFBundleShortVersionString" "11.0.10" "AcrobatProUpdate"
     update "VLC" "/Applications/VLC.app" "CFBundleShortVersionString" "2.2.0" "vlc"
     update "FileMaker Pro 13" "/Applications/FileMaker Pro 13/FileMaker Pro.app" "CFBundleShortVersionString"  "13.0.5" "filemaker13update"
     update "Citrix Receiver" "/Applications/Citrix Receiver.app" "CFBundleShortVersionString" "11.9.15" "CitrixReceiver"
+    update "TeamViewer QS" "/Applications/TeamViewerQS.app" "CFBundleShortVersionString" "10.0.43320" "teamviewerqs"
+    update "TeamViewer" "/Applications/TeamViewer.app" "CFBundleShortVersionString" "10.0.43320" "teamviewerFull"
     runningapps   #presents option to retry apps that were running
 }
 
@@ -208,20 +206,6 @@ if [ ! -f "/Library/Application Support/JAMF/Partners/Library/Scripts/VersionCom
 fi
 chmod +x /Library/Application\ Support/JAMF/Partners/Library/Scripts/VersionCompare.py
 
-
-#Determine user verbosity choice.   1 is quiet,   3 is notice    5 is Verbose
-#set verbosity using other tool; read it in here.
-#Example: defaults write /Library/Preferences/org.Partners.PEASManagement.plist updateAppVerbosity 3
-#userVerbosityChoice=`defaults read /Library/Preferences/org.Partners.PEASManagement.plist updateAppVerbosity`
-#if [ -z $userVerbosityChoice ]; then    #-z means if variable is null(noVerbosity defined by user)
-#    userVerbosityChoice=3
-#fi
-#re='^[1-5]+$'  #defines regular expression to validate verbosity is number as expected.
-#if ! [[ $userVerbosityChoice =~ $re ]] ; then
-#   echo "UpdateApps: Error: User selected verbosity is not 1 through 5.  Setting to 3"
-#    $userVerbosityChoice=3
-#fi
-#writeToLog "UpdateApps: User selected verbosity is $userVerbosityChoice"
 
 checkForUpdates  #routine to check and update apps
 
