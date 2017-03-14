@@ -1,6 +1,8 @@
 # UpdateApps
 Update apps by comparing versions to versions listed in this script.
 
+## This script has been superceded by https://github.com/tmhoule/AppUpdates and is no longer being maintained.
+
 ABOUT
 This script will check the version of applications installed on a workstation.  If a newer version is available, if the application is installed and not in use, the script will update it.  
 
